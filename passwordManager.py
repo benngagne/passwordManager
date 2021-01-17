@@ -3,6 +3,29 @@ import secrets
 import csv
 
 CSV_FILE = "passwords.csv"
+MASTER_HASH_FILE = "master.txt"
+
+def masterHashComapare(password):
+    try:
+        master = open(MASTER_HASH_FILE)
+        hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
+        if (hash == master.read()):
+            return True
+        else:
+            return False
+    except FileNotFoundError:
+        raise
+
+def createMasterHashFile(password):
+    try:
+        with open(CSV_FILE, mode='w') as password_file:
+            password_writer = csv.writer(password_file, delimiter=',', quotechar='"')
+            password_writer.writerow(["site", "username", "salt", "hash"])
+        master = open(MASTER_HASH_FILE, 'w')
+        hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
+        master.write(hash)
+    except:
+        raise
 
 def hashPassword(password):
     salt = secrets.token_hex(64)
@@ -55,9 +78,22 @@ def menu():
     userInput = int(input("Enter option: "))
     return userInput
  
+while(True):
+    try:
+        password = input("Enter master password: ")
+        if(not masterHashComapare(password)):
+            print("\n**WRONG PASSWORD**\n")
+            continue
+        else:
+            print("\nPASSWORD CORRECT\n")
+            break
+    except FileNotFoundError:
+        print("\nMaster password file doesn't exist. Creating master file. Initializing Database.\n")
+        createMasterHashFile(password)
+        break
 
 while(True):
-    choice = menu()   
+    choice = menu()
     if (choice < 1 or choice > 4):
         print("\n**INVALID OPTION**\n")
         continue
@@ -84,17 +120,20 @@ while(True):
         if (site == "site"):
             print("\n**INVALID SITE NAME**\n")
             continue
-        if (readCsv(site) == None):
-            print("\n**NO SITE FOUND**\n")
+        try:
+            if (readCsv(site) == None):
+                print("\n**NO SITE FOUND**\n")
+                continue
+            else:
+                csvRow = readCsv(site)
+                print("\n")
+                print("SITE: %s" % csvRow[0])
+                print("USERNAME: %s" % csvRow[1])
+                print("PASSWORD: %s" % csvRow[3])
+                print("\n")
+        except FileNotFoundError:
+            print("\n**PASSWORD FILE DOES NOT EXIST, CREATE PASSWORD**\n")
             continue
-        else:
-            csvRow = readCsv(site)
-            print("\n")
-            print("SITE: %s" % csvRow[0])
-            print("USERNAME: %s" % csvRow[1])
-            print("PASSWORD: %s" % csvRow[3])
-            print("\n")
-
     if (choice == 3):
         site = input("Enter site to delete: ")
         if (site == "site"):
