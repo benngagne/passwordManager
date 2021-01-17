@@ -5,22 +5,27 @@ import csv
 CSV_FILE = "passwords.csv"
 MASTER_HASH_FILE = "master.txt"
 
-# compare given password with hashed master password file
+# compare given password with salted hash master password file
 def masterHashComapare(password):
     master = open(MASTER_HASH_FILE)
-    hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
-    if (hash == master.read()):
+    masterLines = master.read().splitlines()
+    salt = masterLines[0]
+    hash = hashlib.sha512((salt + password).encode('utf-8')).hexdigest()
+    if (hash == masterLines[1]):
         return True
     else:
         return False
-# create hashed master password file with given password if does not exist and initialize passwords file
+# create salted hash master password file with given password if does not exist and initialize passwords file
 def createMasterHashFile(password):
     with open(CSV_FILE, mode='w') as password_file:
         password_writer = csv.writer(password_file, delimiter=',', quotechar='"')
         password_writer.writerow(["site", "username", "salt", "hash"])
     master = open(MASTER_HASH_FILE, 'w')
-    hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
-    master.write(hash)
+    salt = secrets.token_hex(64)
+    hash = hashlib.sha512((salt + password).encode('utf-8')).hexdigest()
+    master.write("%s\n" % salt)
+    master.write("%s\n" % hash)
+    master.close()
 
 # hash given password
 def hashPassword(password, length):
