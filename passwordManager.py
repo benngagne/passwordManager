@@ -23,9 +23,10 @@ def createMasterHashFile(password):
     master.write(hash)
 
 # hash given password
-def hashPassword(password):
+def hashPassword(password, length):
     salt = secrets.token_hex(64)
     hash = hashlib.sha512((salt + password).encode('utf-8')).hexdigest()
+    hash = hash[:length]
     return salt,hash
 
 # write line to password csv file 
@@ -135,7 +136,12 @@ while(True):
             pass
         username = input("Enter username for %s: " % site)
         password = input("Enter simple password to be hashed: ")
-        hashTuple = hashPassword(password)
+        try:
+            length = int(input("Enter length of hashed password (1-128): "))
+        except ValueError:
+            print("\n**NO INPUT SETTING LENGTH TO 16**\n")
+            length = 16
+        hashTuple = hashPassword(password, length)
         writeCsv(site, username, hashTuple[0], hashTuple[1])
         print("\nPASSWORD HASHED AND SAVED SUCCESSFULLY\n")
 
