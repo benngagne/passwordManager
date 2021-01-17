@@ -6,26 +6,20 @@ CSV_FILE = "passwords.csv"
 MASTER_HASH_FILE = "master.txt"
 
 def masterHashComapare(password):
-    try:
-        master = open(MASTER_HASH_FILE)
-        hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
-        if (hash == master.read()):
-            return True
-        else:
-            return False
-    except FileNotFoundError:
-        raise
+    master = open(MASTER_HASH_FILE)
+    hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
+    if (hash == master.read()):
+        return True
+    else:
+        return False
 
 def createMasterHashFile(password):
-    try:
-        with open(CSV_FILE, mode='w') as password_file:
-            password_writer = csv.writer(password_file, delimiter=',', quotechar='"')
-            password_writer.writerow(["site", "username", "salt", "hash"])
-        master = open(MASTER_HASH_FILE, 'w')
-        hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
-        master.write(hash)
-    except:
-        raise
+    with open(CSV_FILE, mode='w') as password_file:
+        password_writer = csv.writer(password_file, delimiter=',', quotechar='"')
+        password_writer.writerow(["site", "username", "salt", "hash"])
+    master = open(MASTER_HASH_FILE, 'w')
+    hash = hashlib.sha512(password.encode('utf-8')).hexdigest()
+    master.write(hash)
 
 def hashPassword(password):
     salt = secrets.token_hex(64)
@@ -65,6 +59,16 @@ def deleteCsv(site):
         password_writer = csv.writer(password_file, delimiter=',', quotechar='"')
         password_writer.writerows(changes)
             
+def listSites():
+    with open(CSV_FILE) as password_file:
+        password_reader = csv.reader(password_file, delimiter=',')
+        sites = list()
+        line_count = 0
+        for row in password_reader:
+            if (line_count != 0):
+                sites.append(row[0])
+            line_count += 1
+    return sites
 
 def menu():
     print("BENN'S PASSWORD MANAGER")
@@ -72,18 +76,25 @@ def menu():
     print("1. Create password")
     print("2. Retrive password")
     print("3. Delete password")
-    print("4. Quit")
+    print("4. List Sites")
+    print("5. Quit")
     print("-----------------------\n")
 
     userInput = int(input("Enter option: "))
     return userInput
- 
+
+passwordAttempts = 0
 while(True):
     try:
         password = input("Enter master password: ")
         if(not masterHashComapare(password)):
-            print("\n**WRONG PASSWORD**\n")
-            continue
+            if (passwordAttempts > 1):
+                print("\n**TOO MANY WRONG ATTEMPTS**\n")
+                raise SystemExit(0)
+            else:
+                print("\n**WRONG PASSWORD**\n")
+                passwordAttempts += 1
+                continue
         else:
             print("\nPASSWORD CORRECT\n")
             break
@@ -94,7 +105,7 @@ while(True):
 
 while(True):
     choice = menu()
-    if (choice < 1 or choice > 4):
+    if (choice < 1 or choice > 5):
         print("\n**INVALID OPTION**\n")
         continue
 
@@ -145,7 +156,19 @@ while(True):
         else:
             deleteCsv(site)
             print("\nSITE DELETED SUCCESSFULLY\n")
-
+    
     if (choice == 4):
+        if (listSites()):
+            counter = 1
+            print("\n")
+            for site in listSites():
+                print("%i: %s" % (counter,site))
+                counter += 1
+            print("\n")
+        else:
+            print("\nNO SITES IN FILE\n")
+        
+
+    if (choice == 5):
         print("\nGOODBYE! :)\n")
         break
