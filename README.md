@@ -6,5 +6,5 @@ To use, create folder for python files and .csv and .txt file created by the pro
 
 Files names of passwords .csv file and master password .txt file are stored as variables in passwordManager.py -- change as needed.
 
-## DISCLAIMER
-This program is by NO MEANS deemed as secure. This was built for education purposes only. Use at own risk.
+## **DISCLAIMER**
+This program is by **NO MEANS** deemed as secure. This was built for education purposes only. Use at own risk.
